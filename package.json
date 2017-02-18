@@ -1,0 +1,31 @@
+{
+  "name": "webpack-boilerplate",
+  "version": "1.0.0",
+  "description": "A typical webpack.config setup for a react.js project",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "profile:dev": "webpack --env.dev --profile --json > stats.json",
+    "profile:prod": "webpack --env.prod --profile --json > stats.json",
+    "start:dev": "webpack-dev-server --env.dev --hot --inline",
+    "start:prod": "webpack-dev-server --env.prod",
+    "build:dev": "webpack --env.dev",
+    "build:vendor": "webpack --config webpack.dll.js",
+    "prebuild": "npm run clean && npm run build:vendor",
+    "build": "webpack --env.prod -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryandrewjohnson/boilerplate.git"
+  },
+  "keywords": [
+    "webpack",
+    "react"
+  ],
+  "author": "Ryan Johnson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ryandrewjohnson/boilerplate/issues"
+  },
+  "homepage": "https://github.com/ryandrewjohnson/boilerplate#readme"
+}
