@@ -8,6 +8,15 @@ import combineLoaders from 'webpack-combine-loaders';
 import { getIfUtils, removeEmpty } from 'webpack-config-utils';
 import autoprefixer from 'autoprefixer';
 
+/**
+ * I'm in the camp of keeping all config in a single file.
+ * This webpack config is setup to handle multiple environments, 
+ * more specifically "PROD" and "DEV" in this example. I make use of 
+ * a great package of utils called "webpack-config-utils".
+ * 
+ * If you require more info I have written an article detailing this setup:
+ * https://medium.com/@ryandrewjohnson/one-webpack-config-to-rule-them-all-environments-that-is-277457769779
+ */
 export default env => {
   const { ifProd, ifNotProd } = getIfUtils(env);
   return {

@@ -12,7 +12,7 @@ improved.
 
 ## package.json scripts
 
-* **profile:(dev|prod)** - Webpack will generate a stats.json file that can then be fed into this [tool](https://webpack.github.io/analyse/) to analyse.
+* **profile:(dev|prod)** - Webpack will generate a stats.json file that can then be fed into this [tool](https://webpack.github.io/analyse/) to analyze bundles.
 * **start:dev** - For local development - will start webpack-dev-server with Hot Module Replacement.
 * **start:prod** - Test a production build locally in webpack-dev-server.
 * **build:dev** - Build a dev version of app. Key differences being that code will be unminified.
