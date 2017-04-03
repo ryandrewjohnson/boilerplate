@@ -107,7 +107,6 @@ export default env => {
          */
         {
           test: /\.ts(x?)$/,
-          include: [resolve(__dirname, 'src')],
           exclude: /node_modules/,
           use: ['awesome-typescript-loader']
         },
@@ -124,7 +123,6 @@ export default env => {
         ifNotProd({
           test: /\.scss$/,
           exclude: /node_modules/,
-          include: [resolve(__dirname, 'src')],
           use: [
             'style-loader',
             {
@@ -151,9 +149,20 @@ export default env => {
         ifProd({
           test: /\.scss$/,
           exclude: /node_modules/,
-          loader: ExtractTextPlugin.extract({
-            fallbackLoader: 'style',
-            loader: 'css?modules&localIdentName=[name]__[local]___[hash:base64:5]!postcss!sass'
+          use: ExtractTextPlugin.extract({
+            fallback: 'style-loader',
+            use: [
+              {
+                loader: 'css-loader',
+                options: {
+                  modules: true,
+                  localIdentName: '[name]__[local]___[hash:base64:5]',
+                  importLoaders: 1
+                }
+              },
+              'postcss-loader',
+              'sass-loader'
+            ]
           })
         }),
 
