@@ -3,8 +3,6 @@ import { resolve } from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import ProgressBarPlugin from 'progress-bar-webpack-plugin';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import combineLoaders from 'webpack-combine-loaders';
 import { getIfUtils, removeEmpty } from 'webpack-config-utils';
 import autoprefixer from 'autoprefixer';
 
@@ -20,7 +18,7 @@ import autoprefixer from 'autoprefixer';
 export default env => {
   const { ifProd, ifNotProd } = getIfUtils(env);
   return {
-    cache: ifProd(),
+    cache: ifNotProd(),
     // ------------------------------------
     // Entry Points
     // ------------------------------------
@@ -32,9 +30,9 @@ export default env => {
       ]
 
       /**
-       * I don't have a vendor entry because I keep my vendor
-       * scripts in independent bundle. See DLLReferencePlugin
-       * below for details.
+       * I don't have a vendor entry because I use CommonChunksPlugin
+       * to automatically gather vendor scripts. 
+       * See Plugins section...
        */
     },
 
@@ -48,7 +46,7 @@ export default env => {
     // Resolve
     // ------------------------------------
     resolve: {
-      extensions: ['.webpack.js', '.web.js', '.ts', '.tsx', '.js', '.jsx', '.json'],
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       modules: [
         resolve(__dirname, 'src'),
         resolve(__dirname, 'node_modules')
@@ -190,14 +188,7 @@ export default env => {
             name: './assets/fonts/[name]-[hash].[ext]',
             limit: 100000
           }
-        },
-
-        // JSON loader
-        {
-          test: /\.json$/,
-          loader: 'json-loader'
-        }
-        
+        }        
     },
 
     // ------------------------------------
@@ -212,6 +203,25 @@ export default env => {
       new ProgressBarPlugin(),
 
       /**
+       * Creates a bundle for vendor files
+       * NOTE: This assumes your vendor imports exist in the node_modules directory
+       */
+      new webpack.optimize.CommonsChunkPlugin({
+        name: 'vendor',
+        minChunks: function (module) {
+          return module.context && module.context.indexOf('node_modules') !== -1;
+        }
+      }),
+
+      /**
+       * Creates a bundle for just the runtime code
+       * see https://webpack.js.org/guides/code-splitting-libraries/#manifest-file
+       */
+      new webpack.optimize.CommonsChunkPlugin({ 
+        name: 'manifest'
+      }),
+      
+      /**
        * Takes care of inserting all the necessary <scripts> and <styles> into the app'sass
        * index.html entry point.
        * 
@@ -220,29 +230,6 @@ export default env => {
       new HtmlWebpackPlugin({
         template: resolve(__dirname, 'src/index.html')
       }),
-
-      /**
-       * To improve webpack performance all vendor scripts have been split into their
-       * own independent bundle. I had huge gains in build speeds after doing this.
-       * 
-       * The vendor.dll bundle is configured in webpack.dll.js
-       * For more info see: https://robertknight.github.io/posts/webpack-dll-plugins/
-       */
-      new webpack.DllReferencePlugin({
-        context: '.',
-        manifest: require('./src/vendor/vendor.json')
-      }),
-
-      /**
-       * This will copy the vendor files created by the DLLReferencePlugin to our output directory.
-       * The main webpack.config does not handle bundling these files which is why we need to copy them.
-       */
-      new CopyWebpackPlugin([{
-        context: resolve(__dirname, 'src/vendor'),
-        from: '**/*',
-        to: 'vendor',
-        copyUnmodified: true
-      }]),
 
       /**
        * Moves our CSS into external files instead of jamming everything into <style> tag
@@ -286,27 +273,6 @@ export default env => {
       ifProd(new webpack.LoaderOptionsPlugin({
         minimize: true,
         debug: true
-      })),
-
-      /**
-       * Merge small chunks that are lower than this min size (in chars). Size is approximated.
-       *
-       * I would love to get more feedback from the webpack community on what things
-       * should drive this number? 
-       */
-      ifProd(new webpack.optimize.MinChunkSizePlugin({
-        minChunkSize: 1000
-      })),
-
-      /**
-       * Limit the chunk count to a defined value. Chunks are merged until it fits.
-       * 
-       * I would love to get more feedback from the webpack community on what things
-       * should drive this number? e.g. Do I want to limit chunks to certain amount
-       * to limit http requests?
-       */
-      ifProd(new webpack.optimize.LimitChunkCountPlugin({
-        maxChunks: 25
       })),
 
       /**
