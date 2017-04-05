@@ -10,8 +10,7 @@
     "start:dev": "webpack-dev-server --env.dev --hot --inline",
     "start:prod": "webpack-dev-server --env.prod",
     "build:dev": "webpack --env.dev",
-    "build:vendor": "webpack --config webpack.dll.js",
-    "prebuild": "npm run clean && npm run build:vendor",
+    "prebuild": "npm run clean",
     "build": "webpack --env.prod -p"
   },
   "repository": {
