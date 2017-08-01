@@ -87,7 +87,7 @@ export default env => {
     // ------------------------------------
     module: {
       rules: removeEmpty([
-        /**
+         /**
          * // JS loader
          * This is some BS specific for TypeScript, but the key here is the enforce: 'pre'
          * which will ensure this loader runs before the other loaders.
@@ -139,7 +139,7 @@ export default env => {
             {
               loader: 'sass-loader'
             }
-          ]``
+          ]
         }),
 
         /**
@@ -197,7 +197,8 @@ export default env => {
             name: './assets/fonts/[name]-[hash].[ext]',
             limit: 100000
           }
-        }        
+        }       
+      ]) 
     },
 
     // ------------------------------------
@@ -285,7 +286,7 @@ export default env => {
       })),
 
       /**
-       * Uglify that shit!
+       * Uglify
        */
       ifProd(new webpack.optimize.UglifyJsPlugin({
         compress: {
