@@ -24,9 +24,8 @@ export default env => {
     // ------------------------------------
     entry: {
       app: [
-        'react-hot-loader/patch', // for hot module reloading in react
         'babel-polyfill',         // https://babeljs.io/docs/usage/polyfill/
-        'main.tsx'                // main entry point for my React app
+        'app.js'                  // main entry point for my React app
       ]
 
       /**
@@ -46,7 +45,7 @@ export default env => {
     // Resolve
     // ------------------------------------
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      extensions: ['.js', '.jsx', '.json'],
       modules: [
         resolve(__dirname, 'src'),
         resolve(__dirname, 'node_modules')
@@ -57,7 +56,7 @@ export default env => {
     // Output
     // ------------------------------------
     output: {
-      filename: ifProd('bundle.[name].[chunkhash].js', 'bundle.[name].js'),
+      filename: ifProd('[name].bundle.[chunkhash].js', '[name].bundle.js'),
       path: resolve(__dirname, 'dist'),
       publicPath: '/'
     },
@@ -89,67 +88,24 @@ export default env => {
       rules: removeEmpty([
          /**
          * // JS loader
-         * This is some BS specific for TypeScript, but the key here is the enforce: 'pre'
-         * which will ensure this loader runs before the other loaders.
+         * Run all .js files through babel
          */
-        {
-          test: /\.js$/,
-          include: [resolve(__dirname, 'src')],
-          enforce: 'pre',
-          use: ['source-map-loader']
+        { 
+          test: /\.js(x?)$/, 
+          loaders: [ 'babel-loader' ], 
+          exclude: /node_modules/ 
         },
 
         /**
-         * // Typescript loader 
-         * It just so happens I was using Typescript for this project - which I found to be
-         * meh at best, but that's for another day. If you're just using straight up JS this
-         * would most likely swap out with your babel-loader, and target .js(x?) instead.
+         * // CSS
+         * css-loader - for css modules
+         * postcss-loader - for autoprefix
+         * sass-loader - for sass support
          */
         {
-          test: /\.ts(x?)$/,
-          exclude: /node_modules/,
-          use: ['awesome-typescript-loader']
-        },
-
-        /**
-         * // CSS (NON_PROD)
-         * For my CSS I use Css Modules in combination with Sass.
-         * This loader will only run for my dev builds, which is for when I'm developing
-         * locally. The big difference between this and my PROD version of the loader is
-         * that I'm not using the ExtractTextPlugin because it apparently breaks HMR for css.
-         * 
-         * See https://github.com/css-modules/webpack-demo/issues/8
-         */
-        ifNotProd({
           test: /\.scss$/,
           exclude: /node_modules/,
-          use: [
-            'style-loader',
-            {
-              loader: 'css-loader',
-              options: {
-                modules: true,
-                localIdentName: '[name]__[local]___[hash:base64:5]',
-                importLoaders: 1
-              }
-            },
-            {
-              loader: 'postcss-loader'
-            },
-            {
-              loader: 'sass-loader'
-            }
-          ]
-        }),
-
-        /**
-         * // CSS (PROD)
-         * Same as NON-PROD, but uses the ExtractTextPlugin to move CSS into external files.
-         */
-        ifProd({
-          test: /\.scss$/,
-          exclude: /node_modules/,
-          use: ExtractTextPlugin.extract({
+          loader: ExtractTextPlugin.extract({
             fallback: 'style-loader',
             use: [
               {
@@ -157,14 +113,31 @@ export default env => {
                 options: {
                   modules: true,
                   localIdentName: '[name]__[local]___[hash:base64:5]',
-                  importLoaders: 1
+                  importLoaders: 1,
+                  minimize: {
+                    mergeLonghand: false
+                  }
                 }
               },
-              'postcss-loader',
-              'sass-loader'
+              {
+                loader: 'postcss-loader',
+                options: {
+                  sourceMap: true,
+                  plugins: (loader) => [
+                    require('autoprefixer')(),
+                  ]
+                }
+              },
+              {
+                loader: 'sass-loader',
+                options: {
+                  sourceMap: true,
+                  includePaths: [resolve(__dirname, 'src/styles')]
+                }
+              }
             ]
           })
-        }),
+        },
 
         /**
          * Handles loading any image files with url-loader. Meaning any
@@ -249,27 +222,6 @@ export default env => {
       new ExtractTextPlugin({
         filename: './css/[name]-[hash].css',
         allChunks: true
-      }),
-
-      /**
-       * LoaderOptions are still a bit dodgy for me as I started this config file while 
-       * webpack2 was in beta -- so docs were a little thin.
-       * 
-       * These loader options are specific to .scss files.
-       */
-      new webpack.LoaderOptionsPlugin({
-        test: /\.scss$/,
-        options: {
-          postCssLoader: {
-            sourceMap: true,
-            plugins: () => [autoprefixer]
-          },
-          sassLoader: {
-            sourceMap: true,
-            includePaths: [resolve(__dirname, 'src/styles')]
-          },
-          context: '/'
-        }
       }),
 
       // This informs certain dependencies e.g. React that they should be compiled for prod
